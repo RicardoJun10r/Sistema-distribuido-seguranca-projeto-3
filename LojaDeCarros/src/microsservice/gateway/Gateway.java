@@ -83,31 +83,32 @@ public class Gateway {
                     this.SESSAO.put(clientSocket.getSocketAddress(), sessao);
                     unicast(clientSocket, "rsa " + sessao.getRsa().getE_extrangeiro());
                 } else {
-                    String msg_aberta = sessao.getRsa().decifragemCliente(mensagem);
-                    System.out.println("MENSAGEM DECIFRADA RSA: " + msg_aberta);
-                    if (msg_aberta.split(";")[0].equals("autenticar")) {
-                        if (msg_aberta.split(";")[1].equals("servico")) {
+                    String[]msg = mensagem.split(";");
+                    if (msg[0].equals("autenticar")) {
+                        if (msg[1].equals("servico")) {
                             System.out.println(
                                     "[autenticar-servico] Mensagem de " + clientSocket.getSocketAddress() + ": "
-                                            + msg_aberta);
-                            if (msg_aberta.split(";")[2].equals("login")) {
+                                            + mensagem);
+                            if (msg[2].equals("login")) {
                                 SocketAddress socketAddress = this.USUARIOS.stream()
-                                        .filter(conexoes -> conexoes.getSocketAddress().toString().equals(msg_aberta.split(";")[4]))
+                                        .filter(conexoes -> conexoes.getSocketAddress().toString().equals(msg[4]))
                                         .findFirst()
                                         .get().getSocketAddress();
-                                if (Boolean.parseBoolean(msg_aberta.split(";")[3])) {
+                                if (Boolean.parseBoolean(msg[3])) {
                                     sessao = this.SESSAO.get(socketAddress);
                                     sessao.setLogado(true);
                                     this.SESSAO.put(socketAddress, sessao);
-                                    unicast_with_string(msg_aberta.split(";")[4], "status true");
+                                    unicast_with_string(msg[4], "status true");
                                 } else {
                                     this.SESSAO.put(socketAddress, new Sessao(false, false));
-                                    unicast_with_string(msg_aberta.split(";")[4], "status false");
+                                    unicast_with_string(msg[4], "status false");
                                 }
-                            } else if (msg_aberta.split(";")[2].equals("criado")) {
-                                unicast_with_string(msg_aberta.split(";")[3], "Conta criada!");
+                            } else if (msg[2].equals("criado")) {
+                                unicast_with_string(msg[3], "Conta criada!");
                             }
-                        } else if (msg_aberta.split(";")[1].equals("cliente")) {
+                        } else if (msg[1].equals("cliente")) {
+                            String msg_aberta = sessao.getRsa().decifragemCliente(msg[2]);
+                            System.out.println("MENSAGEM DECIFRADA RSA: " + msg_aberta);
                             System.out.println(
                                     "[autenticar-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
                                             + msg_aberta);
@@ -121,26 +122,26 @@ public class Gateway {
                             FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1050 + ";" + msg_aberta
                                     + clientSocket.getSocketAddress().toString());
                         }
-                    } else if (msg_aberta.split(";")[0].equals("loja")) {
-                        if (msg_aberta.split(";")[1].equals("servico")) {
+                    } else if (mensagem.split(";")[0].equals("loja")) {
+                        if (mensagem.split(";")[1].equals("servico")) {
                             System.out.println(
-                                    "[loja-servico] Mensagem de " + clientSocket.getSocketAddress() + ": " + msg_aberta);
-                            if (msg_aberta.split(";")[2].equals("lista")) {
-                                unicast_with_string(msg_aberta.split(";")[4], "lista " + msg_aberta.split(";")[3]);
+                                    "[loja-servico] Mensagem de " + clientSocket.getSocketAddress() + ": " + mensagem);
+                            if (mensagem.split(";")[2].equals("lista")) {
+                                unicast_with_string(mensagem.split(";")[4], "lista " + mensagem.split(";")[3]);
                             } else {
-                                unicast_with_string(msg_aberta.split(";")[3], msg_aberta.split(";")[2]);
+                                unicast_with_string(mensagem.split(";")[3], mensagem.split(";")[2]);
                             }
-                        } else if (msg_aberta.split(";")[1].equals("cliente")) {
+                        } else if (mensagem.split(";")[1].equals("cliente")) {
                             if (autenticar(clientSocket)) {
                                 System.out.println(
                                         "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
-                                                + msg_aberta);
+                                                + mensagem);
                                 FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1060 + ";"
-                                        + msg_aberta + ";" + clientSocket.getSocketAddress().toString());
+                                        + mensagem + ";" + clientSocket.getSocketAddress().toString());
                             } else {
                                 System.out.println(
                                         "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
-                                                + msg_aberta);
+                                                + mensagem);
                                 unicast(clientSocket, "ACESSO NEGADO!");
                             }
                         }

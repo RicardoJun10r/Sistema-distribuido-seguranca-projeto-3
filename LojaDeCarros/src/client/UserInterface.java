@@ -70,9 +70,9 @@ public class UserInterface implements Runnable {
             System.out.println("> Senha");
             System.out.print("> ");
             String senha = scan.next();
-            String msg_rsa = this.rsa.cifragemCliente("autenticar;cliente;" + ADMIN + ";1;" + login + ";" + senha + ";");
+            String msg_rsa = this.rsa.cifragemCliente(ADMIN + ";1;" + login + ";" + senha + ";");
             System.out.println("RSA: " + msg_rsa);
-            enviar(msg_rsa);
+            enviar("autenticar;cliente;" + msg_rsa);
             sendKey();
         } else if (op.equals("2")) {
             String senha;
