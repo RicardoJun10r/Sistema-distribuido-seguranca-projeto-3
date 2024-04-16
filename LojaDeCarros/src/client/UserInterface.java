@@ -2,6 +2,10 @@ package client;
 
 import util.ClientSocket;
 import java.util.Scanner;
+
+import security.CifrasSimetricas;
+import security.RSA;
+
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
@@ -20,24 +24,37 @@ public class UserInterface implements Runnable {
 
     private final Boolean ADMIN;
 
+    private CifrasSimetricas seguranca = new CifrasSimetricas(192);
+
+    private RSA rsa;
+
     public UserInterface(Boolean admin) {
         this.scan = new Scanner(System.in);
         this.logado = false;
         this.ADMIN = admin;
+        this.rsa = new RSA();
     }
 
     @Override
     public void run() {
         String mensagem;
         while ((mensagem = this.clientSocket.getMessage()) != null) {
-            if (mensagem.split(" ")[0].equals("status")) {
-                logado = Boolean.parseBoolean(mensagem.split(" ")[1]);
-            } else if (mensagem.split(" ")[0].equals("lista")) {
-                String res = mensagem.replace("*", "\n");
-                System.out.println("Resposta da loja: " + res);
-            } else {
+            if (mensagem.split(" ")[0].equals("rsa")) {
+                this.rsa.setE_extrangeiro(Long.parseLong(mensagem.split(" ")[1]));
+                this.rsa.phi(this.rsa.getP(), this.rsa.getQ());
+                this.rsa.expD(this.rsa.getE_extrangeiro(), this.rsa.getPhi());
                 System.out.println(
                         "Resposta da loja: " + mensagem);
+            } else {
+                if (mensagem.split(" ")[0].equals("status")) {
+                    logado = Boolean.parseBoolean(mensagem.split(" ")[1]);
+                } else if (mensagem.split(" ")[0].equals("lista")) {
+                    String res = mensagem.replace("*", "\n");
+                    System.out.println("Resposta da loja: " + res);
+                } else {
+                    System.out.println(
+                            "Resposta da loja: " + mensagem);
+                }
             }
         }
     }
@@ -53,7 +70,10 @@ public class UserInterface implements Runnable {
             System.out.println("> Senha");
             System.out.print("> ");
             String senha = scan.next();
-            enviar("autenticar;cliente;" + ADMIN + ";1;" + login + ";" + senha + ";");
+            String msg_rsa = this.rsa.cifragemCliente("autenticar;cliente;" + ADMIN + ";1;" + login + ";" + senha + ";");
+            System.out.println("RSA: " + msg_rsa);
+            enviar(msg_rsa);
+            sendKey();
         } else if (op.equals("2")) {
             String senha;
             String nova_conta = "";
@@ -70,6 +90,11 @@ public class UserInterface implements Runnable {
 
     private void enviar(String mensagem) {
         this.clientSocket.sendMessage(mensagem);
+    }
+
+    private void sendKey(){
+        System.out.println("Chave: " + this.seguranca.getChave());
+        this.clientSocket.enviarObjeto(this.seguranca.getChave());
     }
 
     private void menu() {
@@ -193,6 +218,11 @@ public class UserInterface implements Runnable {
             System.out
                     .println("Cliente conectado ao gateway de endereço = " + ENDERECO_SERVER + " na porta = " + GATEWAY_PORTA);
             new Thread(this).start();
+            this.rsa.gerarPG();
+            this.rsa.setN(this.rsa.getP()*this.rsa.getQ());
+            this.rsa.gerarE();
+            System.out.println("Enivando { p, q, e }");
+            enviar("rsa_chaves;" + this.rsa.getP() + ";" + this.rsa.getQ() + ";" + this.rsa.getE());
             messageLoop();
         } finally {
             clientSocket.close();
