@@ -10,6 +10,8 @@ public class UserInterface implements Runnable {
 
     private final String ENDERECO_SERVER = "localhost";
 
+    private final int GATEWAY_PORTA = 1042;
+
     private ClientSocket clientSocket;
 
     private Scanner scan;
@@ -187,9 +189,9 @@ public class UserInterface implements Runnable {
     public void start() throws IOException, UnknownHostException {
         try {
             clientSocket = new ClientSocket(
-                    new Socket(ENDERECO_SERVER, 1042));
+                    new Socket(ENDERECO_SERVER, GATEWAY_PORTA));
             System.out
-                    .println("Cliente conectado ao gateway de endereço = " + ENDERECO_SERVER + " na porta = " + 1042);
+                    .println("Cliente conectado ao gateway de endereço = " + ENDERECO_SERVER + " na porta = " + GATEWAY_PORTA);
             new Thread(this).start();
             messageLoop();
         } finally {

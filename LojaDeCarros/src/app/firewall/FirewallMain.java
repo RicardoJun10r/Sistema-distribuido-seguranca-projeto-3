@@ -1,18 +1,16 @@
-package app.services;
+package app.firewall;
 
 import java.io.IOException;
 
-import microsservice.server.LojaService;
+import firewall.Firewall;
 
-public class Loja {
-
+public class FirewallMain {
     public static void main(String[] args) {
+        Firewall firewall = new Firewall();
         try {
-            LojaService lojaService = new LojaService();
-            lojaService.start();
+            firewall.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }

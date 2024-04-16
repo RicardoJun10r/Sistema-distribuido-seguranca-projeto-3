@@ -33,6 +33,10 @@ public class ClientSocket {
         this.objectInputStream = new ObjectInputStream(socket.getInputStream());
     }
 
+    public Socket getSocket(){
+        return this.socket;
+    }
+
     public SocketAddress getSocketAddress(){
         return this.socket.getRemoteSocketAddress();
     }

@@ -10,9 +10,11 @@ public class LojaService {
 
     public final int PORTA = 1060;
 
-    public final int GATEWAY_PORTA = 1042;
+    public final int FIREWALL_PORTA = 10101;
 
     public final int DATABASE_PORTA = 6156;
+
+    private final String ENDERECO_SERVER = "localhost";
 
     private ServerSocket serverSocket;
 
@@ -47,23 +49,23 @@ public class LojaService {
                 if (msg[0].equals("response")) {
                     switch (msg[1]) {
                         case "buscado": {
-                            sendToGateway("loja;servico;lista;" + msg[2] + ";" + msg[3]);
+                            sendToFirewall("loja;servico;lista;" + msg[2] + ";" + msg[3]);
                             break;
                         }
                         case "criado": {
-                            sendToGateway("loja;servico;Carro adicionado!;" + msg[2]);
+                            sendToFirewall("loja;servico;Carro adicionado!;" + msg[2]);
                             break;
                         }
                         case "comprado": {
-                            sendToGateway("loja;servico;Carro comprado!;" + msg[2]);
+                            sendToFirewall("loja;servico;Carro comprado!;" + msg[2]);
                             break;
                         }
                         case "atualizado": {
-                            sendToGateway("loja;servico;Carro atualizado!;" + msg[2]);
+                            sendToFirewall("loja;servico;Carro atualizado!;" + msg[2]);
                             break;
                         }
                         case "deletado": {
-                            sendToGateway("loja;servico;Carro deletado!;" + msg[2]);
+                            sendToFirewall("loja;servico;Carro deletado!;" + msg[2]);
                             break;
                         }
                         default:
@@ -77,7 +79,7 @@ public class LojaService {
                                 sendToDB("veiculos;insert;" + msg[4] + ";" + msg[5] + ";" + msg[6] + ";" + msg[7] + ";"
                                         + msg[8] + ";" + msg[9]);
                             } else {
-                                sendToGateway("loja;servico;Erro: SEM AUTORIZACAO;" + msg[9]);
+                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[9]);
                             }
                             break;
                         }
@@ -101,7 +103,7 @@ public class LojaService {
                             if (Boolean.parseBoolean(msg[2])) {
                                 sendToDB("veiculos;delete;" + msg[4] + ";" + msg[5]);
                             } else {
-                                sendToGateway("loja;servico;Erro: SEM AUTORIZACAO;" + msg[5]);
+                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[5]);
                             }
                             break;
                         }
@@ -110,7 +112,7 @@ public class LojaService {
                                 sendToDB("veiculos;update;" + msg[4] + ";" + msg[5] + ";" + msg[6] + ";" + msg[7] + ";"
                                         + msg[8] + ";" + msg[9]);
                             } else {
-                                sendToGateway("loja;servico;Erro: SEM AUTORIZACAO;" + msg[9]);
+                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[9]);
                             }
                             break;
                         }
@@ -124,12 +126,12 @@ public class LojaService {
         }
     }
 
-    private void sendToGateway(String mensagem) {
-        ClientSocket sendGateway;
+    private void sendToFirewall(String mensagem) {
+        ClientSocket sendFirewall;
         try {
-            sendGateway = new ClientSocket(new Socket("localhost", GATEWAY_PORTA));
-            sendGateway.sendMessage(mensagem);
-            sendGateway.close();
+            sendFirewall = new ClientSocket(new Socket("localhost", FIREWALL_PORTA));
+            sendFirewall.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1042 + ";" + mensagem);
+            sendFirewall.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

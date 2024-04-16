@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import util.ClientSocket;
 import util.Sessao;
@@ -19,9 +18,11 @@ public class Gateway {
 
     private final String ENDERECO_SERVER = "localhost";
 
+    private final int FIREWALL_PORTA = 10101;
+    
     private ServerSocket serverSocket;
 
-    private final Vector<ClientSocket> servicos = new Vector<>();
+    private ClientSocket FIREWALL;
 
     private final List<ClientSocket> USUARIOS = new LinkedList<>();
 
@@ -33,10 +34,8 @@ public class Gateway {
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORTA);
         System.out.println("Iniciando servidor na porta = " + PORTA);
-        this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER, 1050)));
-        System.out.println("Conectado ao serviço de autenticação");
-        this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER, 1060)));
-        System.out.println("Conectado ao serviço da loja");
+        this.FIREWALL = (new ClientSocket(new Socket(ENDERECO_SERVER, FIREWALL_PORTA)));
+        System.out.println("Conectado ao FIREWALL ...");
         clientConnectionLoop();
     }
 
@@ -98,7 +97,7 @@ public class Gateway {
                         if (Boolean.parseBoolean(msg[2])) {
                             this.SESSAO.put(clientSocket.getSocketAddress(), new Sessao(false, true));
                         }
-                        servicos.get(0).sendMessage(mensagem + clientSocket.getSocketAddress().toString());
+                        FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1050 + ";" + mensagem + clientSocket.getSocketAddress().toString());
                     }
                 } else if (msg[0].equals("loja")) {
                     if (msg[1].equals("servico")) {
@@ -113,7 +112,7 @@ public class Gateway {
                         if (autenticar(clientSocket)) {
                             System.out.println(
                                     "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": " + mensagem);
-                            servicos.get(1).sendMessage(mensagem + ";" + clientSocket.getSocketAddress().toString());
+                            FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1060 + ";" + mensagem + ";" + clientSocket.getSocketAddress().toString());
                         } else {
                             System.out.println(
                                     "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": " + mensagem);

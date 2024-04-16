@@ -10,9 +10,11 @@ public class AutenticacaoService {
 
     public final int PORTA = 1050;
 
-    public final int GATEWAY_PORTA = 1042;
+    public final int FIREWALL_PORTA = 10101;
 
     public final int DATABASE_PORTA = 6156;
+
+    private final String ENDERECO_SERVER = "localhost";
 
     private ServerSocket serverSocket;
 
@@ -45,9 +47,9 @@ public class AutenticacaoService {
                 String request;
                 if (msg[0].equals("response")) {
                     if (msg[1].equals("login")) {
-                        sendToGateway("autenticar;servico;" + msg[1] + ";" + msg[2] + ";" + msg[3]);
+                        sendToFirewall("autenticar;servico;" + msg[1] + ";" + msg[2] + ";" + msg[3]);
                     } else if (msg[1].equals("criado")) {
-                        sendToGateway("autenticar;servico;criado;" + msg[2]);
+                        sendToFirewall("autenticar;servico;criado;" + msg[2]);
                     } else {
                         System.out.println("Erro[AutenticacaoService]: " + mensagem);
                     }
@@ -89,12 +91,12 @@ public class AutenticacaoService {
         }
     }
 
-    private void sendToGateway(String mensagem){
-        ClientSocket sendGateway;
+    private void sendToFirewall(String mensagem){
+        ClientSocket sendFirewall;
         try {
-            sendGateway = new ClientSocket(new Socket("localhost", GATEWAY_PORTA));
-            sendGateway.sendMessage(mensagem);
-            sendGateway.close();
+            sendFirewall = new ClientSocket(new Socket("localhost", FIREWALL_PORTA));
+            sendFirewall.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1042 + ";" + mensagem);
+            sendFirewall.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -103,7 +105,7 @@ public class AutenticacaoService {
     private void sendToDB(String req){
         ClientSocket send_database;
         try {
-            send_database = new ClientSocket(new Socket("localhost", 6156));
+            send_database = new ClientSocket(new Socket("localhost", DATABASE_PORTA));
             send_database.sendMessage(req);
             send_database.close();
         } catch (IOException e) {
