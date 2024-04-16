@@ -33,9 +33,6 @@ public class Firewall {
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORTA);
         System.out.println("Iniciando FIREWALL na porta = " + PORTA);
-        // this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER,
-        // GATEWAY_PORTA)));
-        // System.out.println("Conectado ao gateway ...");
         this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER, AUTENTICACAO_PORTA)));
         System.out.println("Conectado ao serviço de autenticação ...");
         this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER, LOJA_PORTA)));
@@ -112,21 +109,17 @@ public class Firewall {
     }
 
     private String request(String[] msg) {
-        // Check if the array has at least 4 elements
         if (msg.length > 3) {
-            // Use StringBuilder for efficient string concatenation
+
             StringBuilder sb = new StringBuilder();
-            // Iterate from the fourth element to the end of the array
             for (int i = 3; i < msg.length; i++) {
                 sb.append(msg[i]);
-                // Add a delimiter if not the last element
                 if (i < msg.length - 1) {
                     sb.append(";");
                 }
             }
             return sb.toString();
         } else {
-            // Return an empty string or null based on what is appropriate for your application
             return "";
         }
     }
