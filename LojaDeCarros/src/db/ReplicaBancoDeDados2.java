@@ -94,6 +94,51 @@ public class ReplicaBancoDeDados2 {
                 String[] msg = mensagem.split(";");
                 System.out.println("Mensagem recebida de [ " + clientSocket.getSocketAddress() + " ] = " + mensagem);
                 switch (msg[0]) {
+                    case "att": {
+                        switch (msg[1]) {
+                            case "funcionario": {
+                                insertFuncionario(msg[3], msg[4]);
+                                break;
+                            }
+                            case "cliente": {
+                                insertCliente(msg[3], msg[4]);
+                                break;
+                            }
+                            case "veiculos": {
+                                switch (msg[2]) {
+                                    case "insert": {
+                                        Categoria nova = setCategoria(msg[5]);
+                                        Veiculo novo_veiculo = new Veiculo(msg[3], msg[4], nova,
+                                                LocalDate.parse(msg[6]), Double.valueOf(msg[7]));
+                                        insertVeiculo(novo_veiculo);
+                                        break;
+                                    }
+                                    case "update": {
+                                        if (msg[3].equals("compra")) {
+                                            comprarVeiculo(msg[5], msg[4]);
+                                        } else {
+                                            Categoria nova = setCategoria(msg[5]);
+                                            Veiculo veiculo_atualizado = new Veiculo(msg[3], msg[4], nova,
+                                                    LocalDate.parse(msg[6]), Double.valueOf(msg[7]));
+                                            updateVeiculo(veiculo_atualizado);
+                                        }
+                                        break;
+                                    }
+                                    case "delete": {
+                                        deleteVeiculo(msg[3]);
+                                        break;
+                                    }
+                                    default:
+                                        break;
+                                }
+                                break;
+                            }
+                            default:
+                                System.out.println("Erro ao atualizar BD");
+                                break;
+                        }
+                        break;
+                    }
                     case "funcionario": {
                         switch (msg[1]) {
                             case "select": {
@@ -216,10 +261,10 @@ public class ReplicaBancoDeDados2 {
 
     private void attNextDb(String req){
         ClientSocket response = tryConnect(PORTA_PROXIMO2);
-        response.sendMessage(req);
+        response.sendMessage("att;" + req);
         response.close();
         response = tryConnect(PORTA_PROXIMO3);
-        response.sendMessage(req);
+        response.sendMessage("att;" + req);
         response.close();
     }
 

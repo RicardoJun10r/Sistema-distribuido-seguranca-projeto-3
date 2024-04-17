@@ -21,9 +21,9 @@ public class BancoDeDados {
 
     private final int PORTA = 6156;
 
-    private final int PORTA_PROXIMO2 = 6151;
+    private final int PORTA_PROXIMO2 = 6157;
 
-    private final int PORTA_PROXIMO3 = 6152;
+    private final int PORTA_PROXIMO3 = 6158;
 
     private final int AUTENTICAR_SERVICO_PORTA = 1050;
 
@@ -94,10 +94,55 @@ public class BancoDeDados {
                 String[] msg = mensagem.split(";");
                 System.out.println("Mensagem recebida de [ " + clientSocket.getSocketAddress() + " ] = " + mensagem);
                 switch (msg[0]) {
+                    case "att": {
+                        switch (msg[1]) {
+                            case "funcionario": {
+                                insertFuncionario(msg[3], msg[4]);
+                                break;
+                            }
+                            case "cliente": {
+                                insertCliente(msg[3], msg[4]);
+                                break;
+                            }
+                            case "veiculos": {
+                                switch (msg[2]) {
+                                    case "insert": {
+                                        Categoria nova = setCategoria(msg[5]);
+                                        Veiculo novo_veiculo = new Veiculo(msg[3], msg[4], nova,
+                                                LocalDate.parse(msg[6]), Double.valueOf(msg[7]));
+                                        insertVeiculo(novo_veiculo);
+                                        break;
+                                    }
+                                    case "update": {
+                                        if (msg[3].equals("compra")) {
+                                            comprarVeiculo(msg[5], msg[4]);
+                                        } else {
+                                            Categoria nova = setCategoria(msg[5]);
+                                            Veiculo veiculo_atualizado = new Veiculo(msg[3], msg[4], nova,
+                                                    LocalDate.parse(msg[6]), Double.valueOf(msg[7]));
+                                            updateVeiculo(veiculo_atualizado);
+                                        }
+                                        break;
+                                    }
+                                    case "delete": {
+                                        deleteVeiculo(msg[3]);
+                                        break;
+                                    }
+                                    default:
+                                        break;
+                                }
+                                break;
+                            }
+                            default:
+                                System.out.println("Erro ao atualizar BD");
+                                break;
+                        }
+                        break;
+                    }
                     case "funcionario": {
                         switch (msg[1]) {
                             case "select": {
-                                if(msg[2].equals("boss")){
+                                if (msg[2].equals("boss")) {
                                     sendToAutenticarServico("response;boss;" + selectAllFunc() + ";" + 1048);
                                 } else if (selectFuncionario(msg[2], msg[3]) != null) {
                                     sendToAutenticarServico("response;login;true;" + msg[4]);
@@ -146,7 +191,7 @@ public class BancoDeDados {
                     case "veiculos": {
                         switch (msg[1]) {
                             case "select": {
-                                if(msg[2].equals("quantidade")){
+                                if (msg[2].equals("quantidade")) {
                                     sendToLojaServico("response;buscado;" + quantidadeCarros() + ";" + msg[3]);
                                 } else if (msg[2].equals("-1")) {
                                     String response = "response;buscado;" + selectAllVeiculos() + ";" + msg[3];
@@ -203,10 +248,10 @@ public class BancoDeDados {
         }
     }
 
-    private ClientSocket tryConnect(int porta){
+    private ClientSocket tryConnect(int porta) {
         try {
             Socket proximo = new Socket();
-            proximo.connect(new InetSocketAddress(ENDERECO_SERVER, porta), 5*1000);
+            proximo.connect(new InetSocketAddress(ENDERECO_SERVER, porta), 5 * 1000);
             return new ClientSocket(proximo);
         } catch (Exception e) {
             System.out.println("Erro: " + e);
@@ -214,12 +259,12 @@ public class BancoDeDados {
         return null;
     }
 
-    private void attNextDb(String req){
+    private void attNextDb(String req) {
         ClientSocket response = tryConnect(PORTA_PROXIMO2);
-        response.sendMessage(req);
+        response.sendMessage("att;" + req);
         response.close();
         response = tryConnect(PORTA_PROXIMO3);
-        response.sendMessage(req);
+        response.sendMessage("att;" + req);
         response.close();
     }
 
@@ -345,7 +390,7 @@ public class BancoDeDados {
         }
     }
 
-    private int quantidadeCarros(){
+    private int quantidadeCarros() {
         return (int) this.veiculos.toStream().filter(carro -> carro.getA_venda()).count();
     }
 
