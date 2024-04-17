@@ -3,6 +3,7 @@ package db;
 import model.Cliente;
 import model.Funcionario;
 import model.Veiculo;
+import security.CifrasSimetricas;
 import util.Categoria;
 import util.ClientSocket;
 import util.HashTable.Table;
@@ -37,16 +38,19 @@ public class ReplicaBancoDeDados2 {
 
     private ServerSocket serverSocket;
 
+    private CifrasSimetricas cifrasSimetricas;
+
     public ReplicaBancoDeDados2() {
+        cifrasSimetricas = new CifrasSimetricas();
         this.clientes = new Table<>();
         this.veiculos = new Table<>();
         this.funcionarios = new Table<>();
-        this.clientes.Adicionar(new Cliente("1234", "123"), Integer.parseInt("1234"));
-        this.clientes.Adicionar(new Cliente("4567", "456"), Integer.parseInt("4567"));
-        this.clientes.Adicionar(new Cliente("7891", "789"), Integer.parseInt("7891"));
-        this.funcionarios.Adicionar(new Funcionario("1047", "147"), Integer.parseInt("1047"));
-        this.funcionarios.Adicionar(new Funcionario("2058", "258"), Integer.parseInt("2058"));
-        this.funcionarios.Adicionar(new Funcionario("3069", "369"), Integer.parseInt("3069"));
+        this.clientes.Adicionar(new Cliente("1234", cifrasSimetricas.hashPassword("123")), Integer.parseInt("1234"));
+        this.clientes.Adicionar(new Cliente("4567", cifrasSimetricas.hashPassword("456")), Integer.parseInt("4567"));
+        this.clientes.Adicionar(new Cliente("7891", cifrasSimetricas.hashPassword("789")), Integer.parseInt("7891"));
+        this.funcionarios.Adicionar(new Funcionario("1047", cifrasSimetricas.hashPassword("147")), Integer.parseInt("1047"));
+        this.funcionarios.Adicionar(new Funcionario("2058", cifrasSimetricas.hashPassword("258")), Integer.parseInt("2058"));
+        this.funcionarios.Adicionar(new Funcionario("3069", cifrasSimetricas.hashPassword("369")), Integer.parseInt("3069"));
         this.veiculos.Adicionar(new Veiculo("1111", "Gol", Categoria.ECONOMICO, LocalDate.of(2022, 1, 1), 25000.0),
                 Integer.parseInt("1111"));
         this.veiculos.Adicionar(new Veiculo("2222", "Palio", Categoria.ECONOMICO, LocalDate.of(2021, 12, 15), 22000.0),
@@ -291,7 +295,7 @@ public class ReplicaBancoDeDados2 {
     private Funcionario selectFuncionario(String login, String password) {
         try {
             Funcionario funcionario = this.funcionarios.BuscarCF(Integer.parseInt(login)).getValor();
-            if (funcionario.getSenha().equals(password)) {
+            if (funcionario.getSenha().equals(this.cifrasSimetricas.hashPassword(password))) {
                 return funcionario;
             } else {
                 return null;
@@ -305,7 +309,7 @@ public class ReplicaBancoDeDados2 {
     private Cliente selectCliente(String login, String password) {
         try {
             Cliente cliente = this.clientes.BuscarCF(Integer.parseInt(login)).getValor();
-            if (cliente.getSenha().equals(password)) {
+            if (cliente.getSenha().equals(this.cifrasSimetricas.hashPassword(password))) {
                 return cliente;
             } else {
                 return null;
@@ -357,11 +361,11 @@ public class ReplicaBancoDeDados2 {
     }
 
     private void insertFuncionario(String login, String password) {
-        this.funcionarios.Adicionar(new Funcionario(login, password), Integer.parseInt(login));
+        this.funcionarios.Adicionar(new Funcionario(login, cifrasSimetricas.hashPassword(password)), Integer.parseInt(login));
     }
 
     private void insertCliente(String login, String password) {
-        this.clientes.Adicionar(new Cliente(login, password), Integer.parseInt(login));
+        this.clientes.Adicionar(new Cliente(login, cifrasSimetricas.hashPassword(password)), Integer.parseInt(login));
     }
 
     private void insertVeiculo(Veiculo veiculo) {

@@ -13,7 +13,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-
+import java.security.SecureRandom;
+import java.security.MessageDigest;
 public class CifrasSimetricas implements Serializable {
 
     public static final String ALG = "HmacSHA256";
@@ -54,6 +55,17 @@ public class CifrasSimetricas implements Serializable {
 
     public String getChaveVernan() {
         return vernan;
+    }
+
+    public String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = md.digest(password.getBytes());
+
+            return Base64.getEncoder().encodeToString(hashedBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Erro ao calcular o hash da senha", e);
+        }
     }
 
     private void gerarChave(int t) throws NoSuchAlgorithmException {
