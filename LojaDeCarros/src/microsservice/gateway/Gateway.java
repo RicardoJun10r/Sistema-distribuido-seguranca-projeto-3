@@ -130,10 +130,12 @@ public class Gateway {
                             if (Boolean.parseBoolean(msg_aberta.split(";")[2])) {
                                 this.SESSAO.put(clientSocket.getSocketAddress(), new Sessao(false, true));
                             }
-                            this.SESSAO.get(clientSocket.getSocketAddress()).getSeguranca()
-                                    .setChave((SecretKey) clientSocket.receberObjeto());
-                            System.out.println("Chave: "
-                                    + this.SESSAO.get(clientSocket.getSocketAddress()).getSeguranca().getChave());
+                            if(msg_aberta.split(";")[1].equals("1")){
+                                this.SESSAO.get(clientSocket.getSocketAddress()).getSeguranca()
+                                        .setChave((SecretKey) clientSocket.receberObjeto());
+                                System.out.println("Chave: "
+                                        + this.SESSAO.get(clientSocket.getSocketAddress()).getSeguranca().getChave());
+                            }
                             FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1050 + ";" + msg_aberta
                                     + clientSocket.getSocketAddress().toString());
                         }

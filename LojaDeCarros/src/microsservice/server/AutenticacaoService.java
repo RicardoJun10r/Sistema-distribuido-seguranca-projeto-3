@@ -71,7 +71,7 @@ public class AutenticacaoService {
                             // CRIAR CONTA USUARIO
                             System.out.println(
                                     "[2] Mensagem de " + clientSocket.getSocketAddress() + ": " + mensagem);
-                            request = isAdmin(msg[2]) + ";" + "insert;" + msg[4] + ";" + msg[5] + ";" + msg[6];
+                            request = isAdmin(msg[0]) + ";" + "insert;" + msg[2] + ";" + msg[3] + ";" + msg[4];
                             sendToDB(request);
                             break;
                         }
