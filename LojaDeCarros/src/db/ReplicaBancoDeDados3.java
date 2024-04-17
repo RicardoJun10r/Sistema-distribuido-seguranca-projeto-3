@@ -27,7 +27,7 @@ public class ReplicaBancoDeDados3 {
 
     private final int AUTENTICAR_SERVICO_PORTA = 1050;
 
-    private final int LOJA_SERVICO_PORTA = 1060;
+    private final int LOJA_SERVICO_PORTA = 1062;
 
     private Table<Cliente, Integer> clientes;
 

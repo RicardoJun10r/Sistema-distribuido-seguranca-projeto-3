@@ -159,9 +159,9 @@ public class Firewall {
 
     private ClientSocket tryConnect(){
         try {
-            Socket gateway = new Socket();
-            gateway.connect(new InetSocketAddress(ENDERECO_SERVER, LOJA_PORTA), 5*1000);
-            return new ClientSocket(gateway);
+            Socket loja = new Socket();
+            loja.connect(new InetSocketAddress(ENDERECO_SERVER, LOJA_PORTA), 5*1000);
+            return new ClientSocket(loja);
         } catch (Exception e) {
             System.out.println("Erro: " + e);
             try {
@@ -182,6 +182,24 @@ public class Firewall {
         return null;
     }
 
+    private ClientSocket tryConnectGateway(){
+        try {
+            Socket gateway = new Socket();
+            gateway.connect(new InetSocketAddress(ENDERECO_SERVER, GATEWAY_PORTA), 5*1000);
+            return new ClientSocket(gateway);
+        } catch (Exception e) {
+            System.out.println("Erro: " + e);
+            try {
+                Socket replica = new Socket();
+                replica.connect(new InetSocketAddress(ENDERECO_SERVER, GATEWAY_REPLICA_PORTA), 5*1000);
+                return new ClientSocket(replica);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        return null;
+    }
+
     private void sendLoja(String msg) {
         ClientSocket sendLoja = tryConnect();
         sendLoja.sendMessage(msg);
@@ -189,14 +207,9 @@ public class Firewall {
     }
 
     private void sendToGateway(String mensagem) {
-        ClientSocket sendGateway;
-        try {
-            sendGateway = new ClientSocket(new Socket(ENDERECO_SERVER, GATEWAY_PORTA));
-            sendGateway.sendMessage(mensagem);
-            sendGateway.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ClientSocket sendGateway = tryConnectGateway();
+        sendGateway.sendMessage(mensagem);
+        sendGateway.close();
     }
 
     private void sendToGatewayReplica(String mensagem) {
