@@ -46,6 +46,11 @@ public class UserInterface implements Runnable {
                 System.out.println(
                         "Resposta da loja: " + mensagem);
             } else {
+                System.out.println("MENSAGEM COM RSA: " + mensagem);
+                mensagem = rsa.decifragemServer(mensagem);
+                System.out.println("DECIFRANDO DO BANCO: " + mensagem);
+                mensagem = this.seguranca.decifrar(mensagem);
+                System.out.println("DECIFRANDO AES: " + mensagem);
                 if (mensagem.split(" ")[0].equals("status")) {
                     logado = Boolean.parseBoolean(mensagem.split(" ")[1]);
                 } else if (mensagem.split(" ")[0].equals("lista")) {
@@ -84,7 +89,9 @@ public class UserInterface implements Runnable {
             System.out.print("> ");
             senha = scan.next();
             nova_conta += senha;
-            enviar("autenticar;cliente;" + ADMIN + ";2;" + nova_conta + ";");
+            String msg_rsa = this.rsa.cifragemCliente(ADMIN + ";2;" + nova_conta + ";");
+            System.out.println("RSA: " + msg_rsa);
+            enviar("autenticar;cliente;" + msg_rsa);
         }
     }
 
@@ -129,6 +136,9 @@ public class UserInterface implements Runnable {
 
     private void processOption(String option) {
         String msg;
+        String msg_cifrada;
+        String hmac;
+        String msg_rsa;
         switch (option) {
             case "3":
                 msg = ADMIN + ";3;";
@@ -147,23 +157,35 @@ public class UserInterface implements Runnable {
                 System.out.println("> PREÇO");
                 System.out.print("> R$ ");
                 msg += this.scan.next();
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "4":
                 msg = ADMIN + ";4;";
                 System.out.println("> RENAVAM");
                 System.out.print("> ");
                 msg += this.scan.next();
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "5":
                 msg = ADMIN + ";5";
                 System.out.println("> LISTANDO...");
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "6":
                 msg = ADMIN + ";6";
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "7":
                 msg = ADMIN + ";7;";
@@ -173,14 +195,20 @@ public class UserInterface implements Runnable {
                 System.out.println("> RENAVAM");
                 System.out.print("> ");
                 msg += this.scan.next();
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "8":
                 msg = ADMIN + ";8;";
                 System.out.println("> RENAVAM");
                 System.out.print("> ");
                 msg += this.scan.next();
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "9":
                 msg = ADMIN + ";9;";
@@ -200,7 +228,10 @@ public class UserInterface implements Runnable {
                 System.out.println("> PREÇO OU * [ VAZIO ]");
                 System.out.print("> R$ ");
                 msg += this.scan.next();
-                enviar("loja;cliente;" + msg);
+                msg_cifrada = this.seguranca.cifrar(msg);
+                hmac = this.seguranca.hMac(msg);
+                msg_rsa = this.rsa.cifragemCliente(msg_cifrada + ";" + hmac);
+                enviar("loja;cliente;" + msg_rsa);
                 break;
             case "sair":
                 System.out.println("Saindo");
@@ -222,7 +253,7 @@ public class UserInterface implements Runnable {
             this.rsa.setN(this.rsa.getP()*this.rsa.getQ());
             this.rsa.gerarE();
             System.out.println("Enivando { p, q, e }");
-            enviar("rsa_chaves;" + this.rsa.getP() + ";" + this.rsa.getQ() + ";" + this.rsa.getE());
+            enviar("rsa_chaves;" + this.rsa.getP() + ";" + this.rsa.getQ() + ";" + this.rsa.getE() + ";" + this.seguranca.getChaveVernan());
             messageLoop();
         } finally {
             clientSocket.close();

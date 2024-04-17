@@ -48,18 +48,20 @@ public class AutenticacaoService {
                 if (msg[0].equals("response")) {
                     if (msg[1].equals("login")) {
                         sendToFirewall("autenticar;servico;" + msg[1] + ";" + msg[2] + ";" + msg[3]);
+                    } else if(msg[1].equals("boss")){
+                        sendToFirewall(this.ENDERECO_SERVER + ";" + 1048 + ";" + 1048 + ";" + msg[2] + ";" + 1048);
                     } else if (msg[1].equals("criado")) {
                         sendToFirewall("autenticar;servico;criado;" + msg[2]);
                     } else {
                         System.out.println("Erro[AutenticacaoService]: " + mensagem);
                     }
                 } else {
-                    switch (msg[3]) {
+                    switch (msg[1]) {
                         case "1": {
                             // AUTENTICAR
                             System.out.println(
                                     "[1] Mensagem de " + clientSocket.getSocketAddress() + ": " + mensagem);
-                            request = isAdmin(msg[2]) + ";" + "select;" + msg[4] + ";" + msg[5] + ";" + msg[6];
+                            request = isAdmin(msg[0]) + ";" + "select;" + msg[2] + ";" + msg[3] + ";" + msg[4];
                             sendToDB(request);
                             break;
                         }

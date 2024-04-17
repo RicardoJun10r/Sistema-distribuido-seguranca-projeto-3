@@ -65,6 +65,7 @@ public class Gateway {
 
     private void gatewayLoop(ClientSocket clientSocket) throws IOException {
         String mensagem;
+        String hmac = "";
         Sessao sessao = this.SESSAO.get(clientSocket.getSocketAddress());
         try {
             while ((mensagem = clientSocket.getMessage()) != null) {
@@ -81,11 +82,15 @@ public class Gateway {
 
                     sessao.getRsa().gerarE_estrangeiro();
                     this.SESSAO.put(clientSocket.getSocketAddress(), sessao);
+                    this.SESSAO.get(clientSocket.getSocketAddress()).getSeguranca().setChaveVernan(mensagem.split(";")[4]);
                     unicast(clientSocket, "rsa " + sessao.getRsa().getE_extrangeiro());
                 } else {
                     String[]msg = mensagem.split(";");
                     if (msg[0].equals("autenticar")) {
                         if (msg[1].equals("servico")) {
+
+                            // RESPOSTA DO SERCIÇO
+
                             System.out.println(
                                     "[autenticar-servico] Mensagem de " + clientSocket.getSocketAddress() + ": "
                                             + mensagem);
@@ -94,21 +99,31 @@ public class Gateway {
                                         .filter(conexoes -> conexoes.getSocketAddress().toString().equals(msg[4]))
                                         .findFirst()
                                         .get().getSocketAddress();
+                                sessao = this.SESSAO.get(socketAddress);
                                 if (Boolean.parseBoolean(msg[3])) {
-                                    sessao = this.SESSAO.get(socketAddress);
                                     sessao.setLogado(true);
                                     this.SESSAO.put(socketAddress, sessao);
-                                    unicast_with_string(msg[4], "status true");
+                                    String aes = sessao.getSeguranca().cifrar("status true");
+                                    String msg_rsa = sessao.getRsa().cifragemServer(aes);
+                                    unicast_with_string(msg[4], msg_rsa);
                                 } else {
                                     this.SESSAO.put(socketAddress, new Sessao(false, false));
-                                    unicast_with_string(msg[4], "status false");
+                                    String aes = sessao.getSeguranca().cifrar("status false");
+                                    String msg_rsa = sessao.getRsa().cifragemServer(aes);
+                                    unicast_with_string(msg[4], msg_rsa);
                                 }
                             } else if (msg[2].equals("criado")) {
-                                unicast_with_string(msg[3], "Conta criada!");
+                                String aes = sessao.getSeguranca().cifrar("Conta criada!");
+                                String msg_rsa = sessao.getRsa().cifragemServer(aes);
+                                unicast_with_string(msg[3], msg_rsa);
                             }
                         } else if (msg[1].equals("cliente")) {
+
+                            // REQUISIÇÃO DO CLIENTE
+
                             String msg_aberta = sessao.getRsa().decifragemCliente(msg[2]);
                             System.out.println("MENSAGEM DECIFRADA RSA: " + msg_aberta);
+                            
                             System.out.println(
                                     "[autenticar-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
                                             + msg_aberta);
@@ -126,23 +141,46 @@ public class Gateway {
                         if (mensagem.split(";")[1].equals("servico")) {
                             System.out.println(
                                     "[loja-servico] Mensagem de " + clientSocket.getSocketAddress() + ": " + mensagem);
+                                    
                             if (mensagem.split(";")[2].equals("lista")) {
-                                unicast_with_string(mensagem.split(";")[4], "lista " + mensagem.split(";")[3]);
+                                SocketAddress socketAddress = this.USUARIOS.stream()
+                                        .filter(conexoes -> conexoes.getSocketAddress().toString().equals(msg[4]))
+                                        .findFirst()
+                                        .get().getSocketAddress();
+                                sessao = this.SESSAO.get(socketAddress);
+                                String aes = sessao.getSeguranca().cifrar("lista " + mensagem.split(";")[3]);
+                                String msg_rsa = sessao.getRsa().cifragemServer(aes);
+                                unicast_with_string(mensagem.split(";")[4], msg_rsa);
                             } else {
-                                unicast_with_string(mensagem.split(";")[3], mensagem.split(";")[2]);
+                                SocketAddress socketAddress = this.USUARIOS.stream()
+                                        .filter(conexoes -> conexoes.getSocketAddress().toString().equals(msg[3]))
+                                        .findFirst()
+                                        .get().getSocketAddress();
+                                sessao = this.SESSAO.get(socketAddress);
+                                String aes = sessao.getSeguranca().cifrar(mensagem.split(";")[2]);
+                                String msg_rsa = sessao.getRsa().cifragemServer(aes);
+                                unicast_with_string(mensagem.split(";")[3], msg_rsa);
                             }
                         } else if (mensagem.split(";")[1].equals("cliente")) {
-                            if (autenticar(clientSocket)) {
-                                System.out.println(
-                                        "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
-                                                + mensagem);
-                                FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1060 + ";"
-                                        + mensagem + ";" + clientSocket.getSocketAddress().toString());
-                            } else {
-                                System.out.println(
-                                        "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
-                                                + mensagem);
-                                unicast(clientSocket, "ACESSO NEGADO!");
+                            String msg_aberta = sessao.getRsa().decifragemCliente(msg[2]);
+                            System.out.println("MENSAGEM DECIFRADA RSA: " + msg_aberta);
+                            hmac = msg_aberta.split(";")[1];
+                            sessao = this.SESSAO.get(clientSocket.getSocketAddress());
+                            msg_aberta = sessao.getSeguranca().decifrar(msg_aberta.split(";")[0]);
+                            if(autenticarMensagem(msg_aberta, hmac, sessao)){
+                                System.out.println("PASSOU HMAC");
+                                if (autenticar(clientSocket)) {
+                                    System.out.println(
+                                            "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
+                                                    + msg_aberta);
+                                    FIREWALL.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1060 + ";"
+                                            + msg_aberta + ";" + clientSocket.getSocketAddress().toString());
+                                } else {
+                                    System.out.println(
+                                            "[loja-cliente] Mensagem de " + clientSocket.getSocketAddress() + ": "
+                                                    + msg_aberta);
+                                    unicast(clientSocket, "ACESSO NEGADO!");
+                                }
                             }
                         }
                     }
@@ -151,6 +189,14 @@ public class Gateway {
         } finally {
             clientSocket.close();
         }
+    }
+
+    private Boolean autenticarMensagem(String mensagem, String hmac_recebido, Sessao sessao) {
+        String hmac = sessao.getSeguranca().hMac(mensagem);
+        if (hmac.equals(hmac_recebido))
+            return true;
+        else
+            return false;
     }
 
     private void unicast(ClientSocket destinario, String mensagem) {

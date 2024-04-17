@@ -91,7 +91,9 @@ public class BancoDeDados {
                     case "funcionario": {
                         switch (msg[1]) {
                             case "select": {
-                                if (selectFuncionario(msg[2], msg[3]) != null) {
+                                if(msg[2].equals("boss")){
+                                    sendToAutenticarServico("response;boss;" + selectAllFunc() + ";" + 1048);
+                                } else if (selectFuncionario(msg[2], msg[3]) != null) {
                                     sendToAutenticarServico("response;login;true;" + msg[4]);
                                 } else {
                                     sendToAutenticarServico("response;login;false;" + msg[4]);
@@ -262,6 +264,12 @@ public class BancoDeDados {
             default:
                 return Categoria.ECONOMICO;
         }
+    }
+
+    private String selectAllFunc() {
+        return this.funcionarios.toStream()
+                .map(Funcionario::toString)
+                .collect(Collectors.joining("*"));
     }
 
     private String selectAllVeiculos() {

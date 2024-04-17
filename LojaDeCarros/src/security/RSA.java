@@ -74,7 +74,7 @@ public class RSA {
         System.out.println("cifrando: " + msg);
 
         for (int i = 0; i < msg.length(); i++) {
-            int str_0xff = expModCifra2(msg.charAt(i), e_extrangeiro, n);
+            int str_0xff = expModCifra2(msg.charAt(i), e_extrangeiro, this.n);
             cifrado.append(str_0xff).append(" ");
         }
         
