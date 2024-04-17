@@ -5,7 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
+import java.net.InetSocketAddress;
 
 import util.ClientSocket;
 
@@ -21,9 +21,13 @@ public class Firewall {
 
     private final int LOJA_PORTA = 1060;
 
+    private final int LOJA_PORTA_REPLICA2 = 1061;
+    
+    private final int LOJA_PORTA_REPLICA3 = 1062;
+
     private final int GATEWAY_PORTA = 1042;
 
-    private final Vector<ClientSocket> servicos = new Vector<>();
+    private final int GATEWAY_REPLICA_PORTA = 1043;
 
     private final List<ClientSocket> USUARIOS = new LinkedList<>();
 
@@ -33,10 +37,6 @@ public class Firewall {
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORTA);
         System.out.println("Iniciando FIREWALL na porta = " + PORTA);
-        this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER, AUTENTICACAO_PORTA)));
-        System.out.println("Conectado ao serviço de autenticação ...");
-        this.servicos.add(new ClientSocket(new Socket(ENDERECO_SERVER, LOJA_PORTA)));
-        System.out.println("Conectado ao serviço da loja ...");
         mainLoop();
     }
 
@@ -61,11 +61,20 @@ public class Firewall {
                 case GATEWAY_PORTA:
                     System.out.println("GATEWAY ENTROU");
                     return true;
+                case GATEWAY_REPLICA_PORTA:
+                    System.out.println("GATEWAY REPLICA ENTROU");
+                    return true;
                 case AUTENTICACAO_PORTA:
                     System.out.println("AUTENTICACAO ENTROU");
                     return true;
                 case LOJA_PORTA:
                     System.out.println("LOJA ENTROU");
+                    return true;
+                case LOJA_PORTA_REPLICA2:
+                    System.out.println("LOJA REPLICA 2 ENTROU");
+                    return true;
+                case LOJA_PORTA_REPLICA3:
+                    System.out.println("LOJA REPLICA 3 ENTROU");
                     return true;
                 case 1048:
                     System.out.println("BackDoor");
@@ -107,6 +116,10 @@ public class Firewall {
                             System.out.println("sendToGateway()");
                             sendToGateway(req);
                             break;
+                        case GATEWAY_REPLICA_PORTA:
+                            System.out.println("sendToGatewayReplica()");
+                            sendToGatewayReplica(req);
+                            break;
                         default:
                             System.out.println("Erro [ Firewall ]: politicasSeguranca-switch");
                             break;
@@ -134,7 +147,6 @@ public class Firewall {
     }
 
     private void sendAutenticar(String msg) {
-        // this.servicos.get(0).sendMessage(msg);
         ClientSocket sendAutenticacao;
         try {
             sendAutenticacao = new ClientSocket(new Socket(ENDERECO_SERVER, AUTENTICACAO_PORTA));
@@ -145,22 +157,52 @@ public class Firewall {
         }
     }
 
-    private void sendLoja(String msg) {
-        // this.servicos.get(1).sendMessage(msg);
-        ClientSocket sendLoja;
+    private ClientSocket tryConnect(){
         try {
-            sendLoja = new ClientSocket(new Socket(ENDERECO_SERVER, LOJA_PORTA));
-            sendLoja.sendMessage(msg);
-            sendLoja.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            Socket gateway = new Socket();
+            gateway.connect(new InetSocketAddress(ENDERECO_SERVER, LOJA_PORTA), 5*1000);
+            return new ClientSocket(gateway);
+        } catch (Exception e) {
+            System.out.println("Erro: " + e);
+            try {
+                Socket replica2 = new Socket();
+                replica2.connect(new InetSocketAddress(ENDERECO_SERVER, LOJA_PORTA_REPLICA2), 5*1000);
+                return new ClientSocket(replica2);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                try {
+                    Socket replica3 = new Socket();
+                    replica3.connect(new InetSocketAddress(ENDERECO_SERVER, LOJA_PORTA_REPLICA3), 5*1000);
+                    return new ClientSocket(replica3);
+                } catch (Exception e2) {
+                    e1.printStackTrace();
+                }
+            }
         }
+        return null;
+    }
+
+    private void sendLoja(String msg) {
+        ClientSocket sendLoja = tryConnect();
+        sendLoja.sendMessage(msg);
+        sendLoja.close();
     }
 
     private void sendToGateway(String mensagem) {
         ClientSocket sendGateway;
         try {
             sendGateway = new ClientSocket(new Socket(ENDERECO_SERVER, GATEWAY_PORTA));
+            sendGateway.sendMessage(mensagem);
+            sendGateway.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendToGatewayReplica(String mensagem) {
+        ClientSocket sendGateway;
+        try {
+            sendGateway = new ClientSocket(new Socket(ENDERECO_SERVER, GATEWAY_REPLICA_PORTA));
             sendGateway.sendMessage(mensagem);
             sendGateway.close();
         } catch (IOException e) {

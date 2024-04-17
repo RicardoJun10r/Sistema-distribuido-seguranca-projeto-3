@@ -15,15 +15,15 @@ import java.net.Socket;
 import java.util.stream.Collectors;
 import java.net.InetSocketAddress;
 
-public class BancoDeDados {
-
+public class ReplicaBancoDeDados3 {
+    
     private final String ENDERECO_SERVER = "localhost";
 
-    private final int PORTA = 6156;
+    private final int PORTA = 6158;
 
-    private final int PORTA_PROXIMO2 = 6151;
+    private final int PORTA_PROXIMO2 = 6156;
 
-    private final int PORTA_PROXIMO3 = 6152;
+    private final int PORTA_PROXIMO3 = 6157;
 
     private final int AUTENTICAR_SERVICO_PORTA = 1050;
 
@@ -37,7 +37,7 @@ public class BancoDeDados {
 
     private ServerSocket serverSocket;
 
-    public BancoDeDados() {
+    public ReplicaBancoDeDados3() {
         this.clientes = new Table<>();
         this.veiculos = new Table<>();
         this.funcionarios = new Table<>();

@@ -9,12 +9,15 @@ import security.RSA;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 public class UserInterface implements Runnable {
 
     private final String ENDERECO_SERVER = "localhost";
 
     private final int GATEWAY_PORTA = 1042;
+
+    private final int GATEWAY_REPLICA_PORTA = 1043;
 
     private ClientSocket clientSocket;
 
@@ -242,12 +245,33 @@ public class UserInterface implements Runnable {
         }
     }
 
-    public void start() throws IOException, UnknownHostException {
+    private ClientSocket tryConnect(){
         try {
-            clientSocket = new ClientSocket(
-                    new Socket(ENDERECO_SERVER, GATEWAY_PORTA));
+            Socket gateway = new Socket();
+            gateway.connect(new InetSocketAddress(ENDERECO_SERVER, GATEWAY_PORTA), 5*1000);
             System.out
                     .println("Cliente conectado ao gateway de endereço = " + ENDERECO_SERVER + " na porta = " + GATEWAY_PORTA);
+            return new ClientSocket(gateway);
+        } catch (Exception e) {
+            System.out.println("Erro: " + e);
+            try {
+                Socket replica = new Socket();
+                replica.connect(new InetSocketAddress(ENDERECO_SERVER, GATEWAY_REPLICA_PORTA), 5*1000);
+                System.out
+                    .println("Cliente conectado ao gateway de endereço = " + ENDERECO_SERVER + " na porta = " + GATEWAY_PORTA);
+                return new ClientSocket(replica);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public void start() throws IOException, UnknownHostException {
+        try {
+            
+            clientSocket = tryConnect();
+            
             new Thread(this).start();
             this.rsa.gerarPG();
             this.rsa.setN(this.rsa.getP()*this.rsa.getQ());
