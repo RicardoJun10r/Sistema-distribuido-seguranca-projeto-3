@@ -27,8 +27,6 @@ public class Firewall {
 
     private final List<ClientSocket> USUARIOS = new LinkedList<>();
 
-    private int BOSS_PORTA = 50000;
-
     public Firewall() {
     }
 
@@ -97,9 +95,6 @@ public class Firewall {
                     int porta = Integer.parseInt(msg[2]);
                     System.out.println("porta: " + porta);
                     switch (porta) {
-                        case 1048:
-                            System.out.println("sendToBoss()");
-                            sendToBoss(req);
                         case AUTENTICACAO_PORTA:
                             System.out.println("sendAutenticar()");
                             sendAutenticar(req);
@@ -120,17 +115,6 @@ public class Firewall {
             }
         } finally {
             clientSocket.close();
-        }
-    }
-
-    private void sendToBoss(String req){
-        ClientSocket sendBoss;
-        try {
-            sendBoss = new ClientSocket(new Socket(ENDERECO_SERVER, BOSS_PORTA));
-            sendBoss.sendMessage(req);
-            sendBoss.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

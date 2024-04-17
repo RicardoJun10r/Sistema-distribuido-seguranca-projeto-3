@@ -18,6 +18,8 @@ public class AutenticacaoService {
 
     private ServerSocket serverSocket;
 
+    private int BOSS_PORTA = 50000;
+
     public AutenticacaoService(){}
 
     public void start() throws IOException {
@@ -49,7 +51,7 @@ public class AutenticacaoService {
                     if (msg[1].equals("login")) {
                         sendToFirewall("autenticar;servico;" + msg[1] + ";" + msg[2] + ";" + msg[3]);
                     } else if(msg[1].equals("boss")){
-                        sendToFirewall(this.ENDERECO_SERVER + ";" + 1048 + ";" + 1048 + ";" + msg[2] + ";" + 1048);
+                        sendToBoss(msg[2]);
                     } else if (msg[1].equals("criado")) {
                         sendToFirewall("autenticar;servico;criado;" + msg[2]);
                     } else {
@@ -99,6 +101,17 @@ public class AutenticacaoService {
             sendFirewall = new ClientSocket(new Socket("localhost", FIREWALL_PORTA));
             sendFirewall.sendMessage(this.ENDERECO_SERVER + ";" + this.PORTA + ";" + 1042 + ";" + mensagem);
             sendFirewall.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendToBoss(String req){
+        ClientSocket sendBoss;
+        try {
+            sendBoss = new ClientSocket(new Socket(ENDERECO_SERVER, BOSS_PORTA));
+            sendBoss.sendMessage(req);
+            sendBoss.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
